@@ -1,0 +1,9 @@
+# Echidna config for the RewardsPool property harness.
+testMode: property
+testLimit: 50000
+seqLen: 100
+# Pre-fund the test contract so deposit() has KLC to forward into the pool.
+balanceContract: 100000000000000000000000000
+# Quieter output; corpus saved for reproducibility.
+corpusDir: test-foundry/fuzz/echidna-corpus
+cryticArgs: ["--foundry-out-directory", "forge-out"]

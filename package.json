@@ -1,0 +1,25 @@
+{
+	"name": "vaults-core",
+	"version": "0.1.0",
+	"license": "MIT",
+	"scripts": {
+		"compile": "hardhat compile",
+		"test": "hardhat test",
+		"test:fork": "FORK=1 hardhat test test/fork/POL.fork.spec.ts",
+		"coverage": "hardhat coverage",
+		"invariant": "forge test --match-path 'test-foundry/**'"
+	},
+	"devDependencies": {
+		"@nomicfoundation/hardhat-toolbox": "^5.0.0",
+		"@openzeppelin/hardhat-upgrades": "^3.2.0",
+		"hardhat": "^2.22.0",
+		"solidity-coverage": "^0.8.12",
+		"typescript": "^5.4.0",
+		"ts-node": "^10.9.0",
+		"dotenv": "^16.4.0"
+	},
+	"dependencies": {
+		"@openzeppelin/contracts": "4.9.6",
+		"@openzeppelin/contracts-upgradeable": "4.9.6"
+	}
+}

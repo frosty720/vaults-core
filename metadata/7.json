@@ -1,0 +1,28 @@
+{
+  "name": "KalyChain Vault — Whale 100K",
+  "description": "KalyChain Vault Partnership NFT. Buy once, earn KLC every block — every purchase is backed by protocol-owned liquidity locked in the DAO treasury. Rewards stream in native KLC by weight until the vault reaches its lifetime ROI cap. Verified on-chain. Liquidity locked forever.",
+  "image": "https://vaults.kalychain.io/nft/vault.png",
+  "external_url": "https://vaults.kalychain.io",
+  "attributes": [
+    {
+      "trait_type": "Pack",
+      "value": "Whale 100K"
+    },
+    {
+      "trait_type": "Activation",
+      "value": "$100,000"
+    },
+    {
+      "trait_type": "APR",
+      "value": "140%"
+    },
+    {
+      "trait_type": "ROI Cap",
+      "value": "700%"
+    },
+    {
+      "trait_type": "Standard",
+      "value": "ERC-721"
+    }
+  ]
+}

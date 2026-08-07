@@ -1,0 +1,107 @@
+{
+  "fuzzing": {
+    "workers": 6,
+    "workerResetLimit": 50,
+    "timeout": 0,
+    "testLimit": 50000,
+    "shrinkLimit": 5000,
+    "callSequenceLength": 100,
+    "pruneFrequency": 5,
+    "corpusDirectory": "test-foundry/fuzz/medusa-corpus",
+    "coverageEnabled": true,
+    "coverageFormats": [
+      "html",
+      "lcov"
+    ],
+    "coverageExclusions": [],
+    "revertReporterEnabled": false,
+    "targetContracts": [
+      "EchidnaRewardsPool"
+    ],
+    "predeployedContracts": {},
+    "targetContractsBalances": [],
+    "constructorArgs": {},
+    "deployerAddress": "0x30000",
+    "senderAddresses": [
+      "0x10000",
+      "0x20000",
+      "0x30000"
+    ],
+    "blockNumberDelayMax": 60480,
+    "blockTimestampDelayMax": 604800,
+    "transactionGasLimit": 12500000,
+    "testing": {
+      "stopOnFailedTest": true,
+      "stopOnFailedContractMatching": false,
+      "stopOnNoTests": true,
+      "testAllContracts": false,
+      "testViewMethods": true,
+      "verbosity": 2,
+      "assertionTesting": {
+        "enabled": false,
+        "panicCodeConfig": {
+          "failOnCompilerInsertedPanic": false,
+          "failOnAssertion": true,
+          "failOnArithmeticUnderflow": false,
+          "failOnDivideByZero": false,
+          "failOnEnumTypeConversionOutOfBounds": false,
+          "failOnIncorrectStorageAccess": false,
+          "failOnPopEmptyArray": false,
+          "failOnOutOfBoundsArrayAccess": false,
+          "failOnAllocateTooMuchMemory": false,
+          "failOnCallUninitializedVariable": false
+        }
+      },
+      "propertyTesting": {
+        "enabled": true,
+        "testPrefixes": [
+          "echidna_"
+        ]
+      },
+      "optimizationTesting": {
+        "enabled": true,
+        "testPrefixes": [
+          "optimize_"
+        ]
+      },
+      "targetFunctionSignatures": [],
+      "excludeFunctionSignatures": []
+    },
+    "chainConfig": {
+      "codeSizeCheckDisabled": true,
+      "cheatCodes": {
+        "cheatCodesEnabled": true,
+        "enableFFI": false
+      },
+      "skipAccountChecks": true,
+      "forkConfig": {
+        "forkModeEnabled": false,
+        "rpcUrl": "",
+        "rpcBlock": 1,
+        "poolSize": 20
+      }
+    }
+  },
+  "compilation": {
+    "platform": "crytic-compile",
+    "platformConfig": {
+      "target": "test-foundry/fuzz/EchidnaRewardsPool.sol",
+      "solcVersion": "",
+      "exportDirectory": "",
+      "args": [
+        "--foundry-out-directory",
+        "forge-out"
+      ]
+    }
+  },
+  "slither": {
+    "useSlither": true,
+    "cachePath": "slither_results.json",
+    "args": []
+  },
+  "logging": {
+    "level": "info",
+    "logDirectory": "",
+    "noColor": false
+  }
+}

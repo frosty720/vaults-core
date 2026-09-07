@@ -3,12 +3,14 @@ import { KeeperConfig, StableTarget } from '../types'
 
 dotenv.config()
 
-// Mainnet (3888) default — USDT + KUSD against their VaultManager-configured V3 pools, as
-// verified on-chain 2026-07-06 (vaults-core/scripts/deploy.config.ts NETWORKS[3888].stables).
+// Mainnet (3888) default — USDT + KUSD + USDC against their VaultManager-configured V3 pools,
+// as verified on-chain (vaults-core/scripts/deploy.config.ts NETWORKS[3888].stables; USDC
+// enabled 2026-08-17 via mainnet-usdc-bootstrap.ts).
 // Override with STABLES_JSON for testnet or if the enabled-stable set changes.
 const DEFAULT_STABLES: StableTarget[] = [
 	{ symbol: 'USDT', address: '0x2CA775C77B922A51FcF3097F52bFFdbc0250D99A', decimals: 6, pool: '0x3848C7C8D088549194A264Cb1d639258AbE406a9' },
 	{ symbol: 'KUSD', address: '0xCd02480926317748e95c5bBBbb7D1070b2327f1A', decimals: 18, pool: '0xf8c867c0f07eba68b2acf07b9ffd45b1aa1ddcfe' },
+	{ symbol: 'USDC', address: '0x9cAb0c396cF0F4325913f2269a0b72BD4d46E3A9', decimals: 6, pool: '0x65dd443dfc57f9731ae0fd157b8999976f5fe8ae' },
 ]
 
 function parseBool(value: string | undefined, fallback: boolean): boolean {

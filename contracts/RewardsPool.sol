@@ -18,6 +18,7 @@ contract RewardsPool is
 	UUPSUpgradeable
 {
 	bytes32 public constant WEIGHT_UPDATER_ROLE = keccak256('WEIGHT_UPDATER_ROLE');
+	bytes32 public constant PAUSER_ROLE = keccak256('PAUSER_ROLE'); // two-tier: can only freeze claims, never move funds
 	uint256 private constant PRECISION = 1e18;
 
 	uint256 public totalWeight;
@@ -32,13 +33,17 @@ contract RewardsPool is
 	mapping(uint256 => bool) public matured;
 
 	address public vaultManager;
-	uint256[43] private __gap;
+	bool public claimsPaused; // PAUSER_ROLE circuit breaker for claim()/claimMany() (appended; gap 43 -> 42)
+	uint256[42] private __gap;
 
 	event Registered(uint256 indexed tokenId, uint256 weight, uint256 capUsd);
 	event Checkpointed(uint256 indexed tokenId, uint256 deltaKlc, uint256 deltaUsd, uint256 totalEarnedUsd);
 	event Matured(uint256 indexed tokenId);
 	event Claimed(uint256 indexed tokenId, address indexed owner, uint256 amount);
 	event Accrued(uint256 received, uint256 rewardPerWeightStored);
+	event Revoked(uint256 indexed tokenId, uint256 forfeitedKlc);
+	event ClaimsPaused(bool paused);
+	event Migrated(uint256 indexed tokenId, uint256 weight, uint256 capUsd, uint256 accruedKlc, uint256 earnedUsd, bool matured);
 
 	/// @custom:oz-upgrades-unsafe-allow constructor
 	constructor() { _disableInitializers(); }
@@ -77,6 +82,54 @@ contract RewardsPool is
 		totalWeight += weight;
 		emit Registered(tokenId, weight, cap);
 	}
+
+	/// @notice Admin revocation (via the VaultManager): the vault stops earning, every KLC it had
+	/// coming — pending and already-checkpointed — is forfeited back to the distributable pool,
+	/// and the id is marked matured so it can never be registered again.
+	function revokeVault(uint256 tokenId)
+		external override nonReentrant onlyRole(WEIGHT_UPDATER_ROLE) returns (uint256 forfeitedKlc)
+	{
+		require(vaultWeight[tokenId] > 0 || matured[tokenId], 'RP: not registered');
+		_accrue();
+		forfeitedKlc = _pendingKlc(tokenId) + accrued[tokenId];
+		rewardPerWeightPaid[tokenId] = rewardPerWeightStored;
+		accrued[tokenId] = 0;
+		if (!matured[tokenId]) {
+			matured[tokenId] = true;
+			totalWeight -= vaultWeight[tokenId];
+			vaultWeight[tokenId] = 0;
+		}
+		// forfeited KLC stays in the contract and is picked up by the next _accrue() for the others
+		if (forfeitedKlc > 0) lastDistributedBalance -= forfeitedKlc;
+		emit Revoked(tokenId, forfeitedKlc);
+	}
+
+	/// @notice Relaunch migration (via the VaultManager): restore one snapshot vault's reward state. The
+	/// carried `accruedKlc` must already sit in this contract (funded by the migrator) — it is earmarked
+	/// (lastDistributedBalance) so it is claimable by that vault only and never redistributed by weight.
+	function migrateVault(uint256 tokenId, uint256 weight, uint256 cap, uint256 accruedKlc, uint256 earnedUsd_, bool matured_)
+		external override nonReentrant onlyRole(WEIGHT_UPDATER_ROLE)
+	{
+		require(vaultWeight[tokenId] == 0 && !matured[tokenId] && accrued[tokenId] == 0, 'RP: already registered');
+		require(address(this).balance - lastDistributedBalance >= accruedKlc, 'RP: accrued not funded');
+		lastDistributedBalance += accruedKlc;
+		accrued[tokenId] = accruedKlc;
+		capUsd[tokenId] = cap;
+		earnedUsd[tokenId] = earnedUsd_;
+		rewardPerWeightPaid[tokenId] = rewardPerWeightStored;
+		if (matured_) {
+			matured[tokenId] = true;
+		} else {
+			require(weight > 0, 'RP: zero weight');
+			vaultWeight[tokenId] = weight;
+			totalWeight += weight;
+		}
+		emit Migrated(tokenId, matured_ ? 0 : weight, cap, accruedKlc, earnedUsd_, matured_);
+	}
+
+	/// @notice Circuit breaker (PAUSER_ROLE): freezes claim()/claimMany() only. Checkpoints/maturity keep working.
+	function pause() external onlyRole(PAUSER_ROLE) { claimsPaused = true; emit ClaimsPaused(true); }
+	function unpause() external onlyRole(PAUSER_ROLE) { claimsPaused = false; emit ClaimsPaused(false); }
 
 	// ─── internal helpers ────────────────────────────────────────────────────
 
@@ -146,9 +199,10 @@ contract RewardsPool is
 		return amount;
 	}
 
-	function claim(uint256 id) external override nonReentrant { _claim(id); }
+	function claim(uint256 id) external override nonReentrant { require(!claimsPaused, 'RP: paused'); _claim(id); }
 
 	function claimMany(uint256[] calldata ids) external override nonReentrant {
+		require(!claimsPaused, 'RP: paused');
 		for (uint256 i = 0; i < ids.length; i++) { _claim(ids[i]); }
 	}
 

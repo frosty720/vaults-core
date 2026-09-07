@@ -45,6 +45,30 @@ export const TIERS: TierCfg[] = [
 const REF_FALLBACK = 416666666666666666666n // ~$0.0024/KLC; live pool spot overrides per stable
 
 export const NETWORKS: Record<number, NetCfg> = {
+	// ── KMT relaunch chain (3890) — addresses from kalychain-ops/files/kmt-3890/addresses.json (2026-08-21) ──
+	3890: {
+		label: 'kmt-3890',
+		wklc: '0xf90F0Bd56558Ac12F7FC285571D38181d2feD69b', // WKMT (WETH9)
+		router: '0x290F0B0cce8b9AA8F21C57BC7dDc3768D05F3f5b', // SwapRouter02
+		npm: '0xCa4a8fC696ADAE8edC042cB9E32Cd7F0A28EBdf0',
+		treasury: '0xDF8CFefEa7DaA5E5B23c262A461aCcA6356BCA90', // new Treasury (ERC721-capable, execute)
+		dev: '0x12BA3F424d630A583BdBCa56b0c1A0a7C1d7D66e', // core dev wallet (unchanged)
+		amb: '0xDF8CFefEa7DaA5E5B23c262A461aCcA6356BCA90',
+		builders: '0xDF8CFefEa7DaA5E5B23c262A461aCcA6356BCA90',
+		stables: [
+			// USDT only at launch (KUSD re-enabled once KUSD is live on 3890; USDC once backed)
+			{ sym: 'USDT', addr: '0x6318EcDbae6B469D39C38949eDC671f4bA8A6172', decimals: 6, pool: '0xa9Ac6D3c75A883Cc5D6EfE7EbB973c68174bA61F', fee: 3000 },
+		],
+		priceAnchor: '0x6318EcDbae6B469D39C38949eDC671f4bA8A6172', // USDT
+		metadataCid: process.env.METADATA_CID ?? 'QmcQnJQgQpAqz1piZsqAubV1NjteTmxk6S3GvssqNcs8Be', // same 8 tier JSONs as 3888
+		maxRefDevBps: 4000,
+		maxSlippageBps: 2000,
+		buyImpactBps: 300,
+		minBuyUsd: 1,
+		maxTotalWeight: BigInt(process.env.MAX_TOTAL_WEIGHT ?? '1000000000000'),
+		maxWeightCeiling: BigInt(process.env.MAX_WEIGHT_CEILING ?? '10000000000000'),
+		refFallback: 5_000_000_000_000_000_000n, // 5 KMT per $1 (= $0.20/KMT); live pool spot overrides
+	},
 	// ── KalyChain TESTNET (3889) — values that produced the live testnet stack ──
 	3889: {
 		label: 'testnet',
@@ -85,6 +109,9 @@ export const NETWORKS: Record<number, NetCfg> = {
 		stables: [
 			{ sym: 'KUSD', addr: '0xCd02480926317748e95c5bBBbb7D1070b2327f1A', decimals: 18, pool: '0xf8c867c0f07eba68b2acf07b9ffd45b1aa1ddcfe', fee: 3000 },
 			{ sym: 'USDT', addr: '0x2CA775C77B922A51FcF3097F52bFFdbc0250D99A', decimals: 6, pool: '0x3848c7c8d088549194a264cb1d639258abe406a9', fee: 3000 },
+			// Enabled 2026-08-17 via scripts/mainnet-usdc-bootstrap.ts (band bootstrap after the
+			// inverted-price fix; bridged Hyperlane synthetic USDC).
+			{ sym: 'USDC', addr: '0x9cAb0c396cF0F4325913f2269a0b72BD4d46E3A9', decimals: 6, pool: '0x65dd443dfc57f9731ae0fd157b8999976f5fe8ae', fee: 3000 },
 		],
 		priceAnchor: '0x2CA775C77B922A51FcF3097F52bFFdbc0250D99A', // USDT
 		metadataCid: process.env.METADATA_CID ?? '', // from upload-nft-metadata.sh

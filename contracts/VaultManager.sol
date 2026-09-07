@@ -30,6 +30,7 @@ contract VaultManager is
 
 	struct Tier { uint256 priceUSD; uint16 aprBps; uint256 weight; string metadataURI; bool active; }
 	struct StableConfig { bool enabled; uint8 decimals; address v3Pool; uint24 v3Fee; }
+	struct MigrateEntry { uint256 id; address owner; uint8 tier; address sponsor; uint256 accruedKlc; uint256 earnedUsd; uint256 capUsd; bool matured; }
 
 	IRewardsPool public rewardsPool;
 	address public treasury;
@@ -85,6 +86,9 @@ contract VaultManager is
 	uint16 public devBps; // dev multisig
 	uint16 public daoBps; // DAO treasury (builders/performers/marketing/stabilization/security off-chain)
 
+	// --- relaunch migration (v5) --- packs into the fee-split slot; one-way switch.
+	bool public migrationClosed;
+
 	uint256[30] private __gap;
 
 	event Purchased(address indexed buyer, uint256 indexed tokenId, uint8 tier, address stable, uint256 paid);
@@ -108,6 +112,9 @@ contract VaultManager is
 	event MaxTotalWeightUpdated(uint256 newMax);
 	event ReferencePriceUpdated(address indexed stable, uint256 price);
 	event SlippageBpsUpdated(uint16 bps);
+	event VaultRevoked(uint256 indexed tokenId, address indexed owner, uint256 forfeitedKlc);
+	event VaultMigrated(uint256 indexed tokenId, address indexed owner, uint8 tier);
+	event MigrationClosed();
 
 	/// @custom:oz-upgrades-unsafe-allow constructor
 	constructor() { _disableInitializers(); }
@@ -288,6 +295,45 @@ contract VaultManager is
 		require(token != wklc, 'VM: wklc is reserve');
 		IERC20Upgradeable(token).safeTransfer(to, amount);
 	}
+
+	/// @notice Revoke vaults bought with illegitimately obtained funds: burn the NFT, remove its
+	/// weight here and in the RewardsPool, and forfeit every KLC it had coming to the other holders.
+	function revokeVaults(uint256[] calldata ids) external onlyRole(DEFAULT_ADMIN_ROLE) {
+		for (uint256 i = 0; i < ids.length; i++) {
+			uint256 id = ids[i];
+			address owner = ownerOf(id); // reverts for unknown / already-burned ids
+			totalWeight -= vaultWeight[id];
+			delete vaultWeight[id];
+			_burn(id);
+			uint256 forfeited = rewardsPool.revokeVault(id);
+			emit VaultRevoked(id, owner, forfeited);
+		}
+	}
+
+	/// @notice Relaunch migration: re-create snapshot vaults under their original ids/owners (tier -> weight from
+	/// the current tier table), restore the sticky sponsor, and carry reward state into the RewardsPool.
+	/// Admin-only and only until closeMigration() — which is one-way — so this can never become a mint backdoor.
+	function migrateVaults(MigrateEntry[] calldata es) external onlyRole(DEFAULT_ADMIN_ROLE) {
+		require(!migrationClosed, 'VM: migration closed');
+		for (uint256 i = 0; i < es.length; i++) {
+			MigrateEntry calldata e = es[i];
+			Tier memory t = tiers[e.tier];
+			require(t.priceUSD > 0, 'VM: bad tier');
+			tierOf[e.id] = e.tier;
+			vaultWeight[e.id] = t.weight;
+			totalWeight += t.weight;
+			if (e.sponsor != address(0) && e.sponsor != e.owner && sponsorOf[e.owner] == address(0)) {
+				sponsorOf[e.owner] = e.sponsor;
+				emit SponsorSet(e.owner, e.sponsor);
+			}
+			_mint(e.owner, e.id); // plain mint: snapshot owners are EOAs; reverts 'token already minted' on duplicates
+			rewardsPool.migrateVault(e.id, t.weight, e.capUsd, e.accruedKlc, e.earnedUsd, e.matured);
+			if (e.id >= nextTokenId) nextTokenId = e.id + 1;
+			emit VaultMigrated(e.id, e.owner, e.tier);
+		}
+	}
+
+	function closeMigration() external onlyRole(DEFAULT_ADMIN_ROLE) { migrationClosed = true; emit MigrationClosed(); }
 
 	function pause() external onlyRole(OPERATOR_ROLE) { _pause(); }
 	function unpause() external onlyRole(OPERATOR_ROLE) { _unpause(); }

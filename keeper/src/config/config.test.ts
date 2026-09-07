@@ -32,8 +32,8 @@ describe('loadConfig', () => {
 		expect(cfg.gasLimit).toBe(200_000n)
 		expect(cfg.dryRun).toBe(false)
 		expect(cfg.alertWebhookUrl).toBeNull()
-		expect(cfg.stables).toHaveLength(2)
-		expect(cfg.stables.map((s) => s.symbol)).toEqual(['USDT', 'KUSD'])
+		expect(cfg.stables).toHaveLength(3)
+		expect(cfg.stables.map((s) => s.symbol)).toEqual(['USDT', 'KUSD', 'USDC'])
 	})
 
 	it('overrides defaults from env', () => {

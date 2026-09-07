@@ -1,5 +1,10 @@
 # vault-reprice-keeper
 
+> **MOVED (2026-08-17):** this keeper now lives in the kaly-mm platform as
+> `kaly-mm/packages/reprice-keeper` (`@kaly/reprice-keeper`, pm2 app `klc-reprice`) — that
+> copy is canonical and is the one deployed/automated. This directory is kept as the
+> original reference; make changes over there.
+
 Keeps `VaultManager.referencePrice[stable]` aligned with each stable's Uniswap V3 pool spot
 price, so vault purchases never revert with `Price slippage check` again.
 

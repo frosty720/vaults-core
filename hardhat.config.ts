@@ -20,6 +20,18 @@ const config: HardhatUserConfig = {
 		hardhat: process.env.FORK
 			? { forking: { url: MAINNET_RPC }, chainId: 3888 }
 			: { accounts: { count: 20, accountsBalance: '1000000000000000000000000' } },
+		// local `anvil --fork-url <mainnet rpc> --auto-impersonate` — used by scripts/revoke-incident.ts dry-runs
+		anvil: { url: 'http://127.0.0.1:8545', chainId: 3888 },
+		// anvil --fork-url https://mainrpc.kalychain.io/rpc --port 8545 (chain 3890 fork) — signs with DEPLOYER_PK locally, nothing leaves the box
+		anvil3890: { url: 'http://127.0.0.1:8545', chainId: 3890, accounts: process.env.DEPLOYER_PK ? [process.env.DEPLOYER_PK] : [], gas: 10_000_000, gasPrice: 21_000_000_000 },
+		// KMT relaunch chain (chainId 3890) — public RPC mainrpc.kalychain.io (testnetrpc retired 2026-09-07)
+		kmt: {
+			url: process.env.KMT_RPC ?? 'https://mainrpc.kalychain.io/rpc',
+			chainId: 3890,
+			accounts: process.env.DEPLOYER_PK ? [process.env.DEPLOYER_PK] : [],
+			gas: 10_000_000,
+			gasPrice: 21_000_000_000,
+		},
 		testnet: {
 			url: process.env.KALY_TESTNET_RPC ?? 'https://testnetrpc.kalychain.io/rpc',
 			chainId: 3889,
@@ -40,12 +52,17 @@ const config: HardhatUserConfig = {
 	},
 	// KalyScan is Blockscout — verify via its Etherscan-compatible API. apiKey can be any non-empty string.
 	etherscan: {
-		apiKey: { kalychain: process.env.KALYSCAN_API_KEY ?? 'blockscout' },
+		apiKey: { kalychain: process.env.KALYSCAN_API_KEY ?? 'blockscout', kmt: 'blockscout' },
 		customChains: [
 			{
 				network: 'kalychain',
 				chainId: 3888,
 				urls: { apiURL: 'https://kalyscan.io/api', browserURL: 'https://kalyscan.io' },
+			},
+			{
+				network: 'kmt',
+				chainId: 3890,
+				urls: { apiURL: 'https://testnet.kalyscan.io/api', browserURL: 'https://testnet.kalyscan.io' },
 			},
 		],
 	},

@@ -99,7 +99,7 @@ Enabled testnet stables (all with seeded WKLC V3 pools, fee 0.3%): KUSD `0xd15F�
 
 ### KalyChain Mainnet (chainId 3888)
 
-Launch is staged — the full mainnet config (USDT + KUSD only) lives in [`scripts/deploy.config.ts`](scripts/deploy.config.ts); proxy addresses will be published here at deploy.
+Launch is staged — the full mainnet config (USDT + KUSD + USDC as of 2026-08-17) lives in [`scripts/deploy.config.ts`](scripts/deploy.config.ts); proxy addresses will be published here at deploy. Mainnet USDC (bridged): token `0x9cAb0c396cF0F4325913f2269a0b72BD4d46E3A9`, WKLC pool `0x65Dd443DFc57F9731AE0fD157B8999976F5fe8aE` (0.3%), enabled via [`scripts/mainnet-usdc-bootstrap.ts`](scripts/mainnet-usdc-bootstrap.ts).
 
 ## Scripts
 

@@ -3,6 +3,8 @@ pragma solidity 0.8.19;
 
 interface IRewardsPool {
 	function registerVault(uint256 tokenId, uint256 weight, uint256 capUsd) external;
+	function revokeVault(uint256 tokenId) external returns (uint256 forfeitedKlc);
+	function migrateVault(uint256 tokenId, uint256 weight, uint256 capUsd, uint256 accruedKlc, uint256 earnedUsd, bool matured) external;
 	function claim(uint256 tokenId) external;
 	function claimMany(uint256[] calldata tokenIds) external;
 	function mature(uint256 tokenId) external;
